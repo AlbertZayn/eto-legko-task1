@@ -1,12 +1,36 @@
 #!/usr/bin/env node
 /**
- * Internet download speed test: 10 sequential requests to a given URL.
+ * Измерение скорости скачивания через последовательные HTTP-запросы.
+ *
+ * Скрипт принимает URL, выполняет REQUEST_COUNT запросов строго один за другим
+ * (следующий стартует только после полного ответа предыдущего), читает тело
+ * ответа целиком и печатает:
+ *
+ * - среднее время одного запроса (секунды, s);
+ * - суммарный объём скачанных данных (мегабайты, MB; 1 MB = 1_000_000 байт);
+ * - скорость скачивания (мегабиты в секунду, Mbps), считаемую как
+ *   (сумма_байт × 8) / (суммарное_время_с × 1_000_000).
+ *
+ * Пример:
+ *   node speed_test.js "https://httpbin.org/bytes/1048576"
+ *
+ * Требования: Node.js 18+ (встроенный fetch), без внешних зависимостей.
  */
 
 "use strict";
 
+/** @type {number} Число последовательных загрузок одного и того же URL. */
 const REQUEST_COUNT = 10;
 
+/**
+ * Скачать полный ответ по URL и замерить длительность.
+ *
+ * @param {string} url Адрес ресурса (например, тяжёлая картинка или бинарный файл).
+ * @returns {Promise<{elapsed: number, size: number}>}
+ *   `elapsed` — время от начала запроса до полного чтения тела (секунды);
+ *   `size` — размер тела ответа в байтах.
+ * @throws {Error} При HTTP-ошибке (не 2xx) или сбое сети.
+ */
 async function fetchFull(url) {
   const start = performance.now();
   const response = await fetch(url);
@@ -18,6 +42,12 @@ async function fetchFull(url) {
   return { elapsed, size: buffer.length };
 }
 
+/**
+ * Точка входа: разобрать аргументы, выполнить замеры и вывести итог.
+ * При ошибке любого запроса завершает процесс с кодом 1.
+ *
+ * @returns {Promise<void>}
+ */
 async function main() {
   const url = process.argv[2];
   if (!url) {

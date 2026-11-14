@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
-"""Internet download speed test: 10 sequential requests to a given URL."""
+"""Измерение скорости скачивания через последовательные HTTP-запросы.
+
+Скрипт принимает URL, выполняет REQUEST_COUNT запросов строго один за другим
+(следующий стартует только после полного ответа предыдущего), читает тело
+ответа целиком и печатает:
+
+- среднее время одного запроса (секунды, s);
+- суммарный объём скачанных данных (мегабайты, MB; 1 MB = 1_000_000 байт);
+- скорость скачивания (мегабиты в секунду, Mbps), считаемую как
+  (сумма_байт × 8) / (суммарное_время_с × 1_000_000).
+
+Пример::
+
+    python3 speed_test.py "https://httpbin.org/bytes/1048576"
+
+Требования: Python 3.8+, только стандартная библиотека.
+"""
 
 from __future__ import annotations
 
@@ -11,10 +27,23 @@ import urllib.request
 
 
 REQUEST_COUNT = 10
+"""Число последовательных загрузок одного и того же URL."""
 
 
 def fetch(url: str) -> tuple[float, int]:
-    """Download the full response. Returns (elapsed_seconds, bytes_downloaded)."""
+    """Скачать полный ответ по URL и замерить длительность.
+
+    Args:
+        url: Адрес ресурса (например, тяжёлая картинка или бинарный файл).
+
+    Returns:
+        Кортеж ``(elapsed_seconds, bytes_downloaded)``, где
+        ``elapsed_seconds`` — время от начала запроса до полного чтения тела,
+        ``bytes_downloaded`` — размер тела ответа в байтах.
+
+    Raises:
+        urllib.error.URLError: при сетевой ошибке или неудачном соединении.
+    """
     start = time.perf_counter()
     with urllib.request.urlopen(url) as response:
         data = response.read()
@@ -23,8 +52,16 @@ def fetch(url: str) -> tuple[float, int]:
 
 
 def main() -> int:
+    """Точка входа: разобрать аргументы, выполнить замеры и вывести итог.
+
+    Returns:
+        Код выхода: ``0`` при успехе, ``1`` при ошибке любого из запросов.
+    """
     parser = argparse.ArgumentParser(
-        description="Measure download speed with 10 sequential HTTP requests."
+        description=(
+            "Measure download speed with 10 sequential HTTP requests. "
+            "Reports average time (s), total size (MB), and speed (Mbps)."
+        )
     )
     parser.add_argument(
         "url",
