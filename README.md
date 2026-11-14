@@ -1,6 +1,6 @@
 # Internet speed test
 
-Консольные скрипты (Python и Node.js), которые измеряют скорость скачивания: делают **10 последовательных** HTTP-запросов к указанному URL, дожидаются полного ответа на каждый и выводят среднее время, объём данных и скорость.
+Консольные скрипты (Python и Node.js): **10 последовательных** HTTP-запросов к URL, полное чтение каждого ответа; на выходе — среднее время, суммарный объём и скорость скачивания.
 
 ## Единицы измерения
 
@@ -10,58 +10,33 @@
 | Общий объём данных | **MB** (мегабайты) | 1 MB = 1 000 000 байт (SI) |
 | Скорость скачивания | **Mbps** (мегабиты в секунду) | `(сумма_байт × 8) / (суммарное_время_с × 1 000 000)` |
 
-Скорость считается по **суммарному** объёму и **суммарному** времени всех 10 запросов (не по среднему времени одного запроса).
+Скорость считается по **суммарному** объёму и **суммарному** времени всех 10 запросов.
 
 ## Требования
 
-- **Python:** 3.8+
-- **Node.js:** 18+ (нужен встроенный `fetch`)
-
-Внешние зависимости не нужны.
+**Python** 3.8+ · **Node.js** 18+ (встроенный `fetch`) · без внешних зависимостей.
 
 ## Запуск
 
-Подставьте свой URL (удобно брать тяжёлую картинку или большой файл).
-
-### Python
+Пример с публичным файлом Wikimedia (стабильнее httpbin; некоторые хосты могут ограничивать частоту запросов):
 
 ```bash
-python3 speed_test.py "https://example.com/large-image.jpg"
-```
-
-### Node.js
-
-```bash
-node speed_test.js "https://example.com/large-image.jpg"
-```
-
-### Пример с публичным файлом (~1 MB)
-
-```bash
-python3 speed_test.py "https://httpbin.org/bytes/1048576"
-# или
-node speed_test.js "https://httpbin.org/bytes/1048576"
+python3 speed_test.py "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg"
+node speed_test.js "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg"
 ```
 
 ## Пример вывода
 
 ```
-URL: https://httpbin.org/bytes/1048576
+URL: https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg
 Requests: 10 (sequential)
 
-Request 1/10: 1.563 s, 1,048,576 bytes
-Request 2/10: 1.423 s, 1,048,576 bytes
+Request 1/10: 0.842 s, 5582617 bytes
+Request 2/10: 0.791 s, 5582617 bytes
 ...
-Request 10/10: 1.436 s, 1,048,576 bytes
+Request 10/10: 0.805 s, 5582617 bytes
 
-Average request time: 1.494 s
-Total downloaded:     10.486 MB
-Download speed:       5.62 Mbps
+Average request time: 0.812 s
+Total downloaded:     55.826 MB
+Download speed:       54.97 Mbps
 ```
-
-## Как это работает
-
-1. Скрипт принимает URL аргументом командной строки.
-2. Выполняет 10 запросов **строго последовательно** (следующий стартует только после полного ответа предыдущего).
-3. Для каждого запроса полностью читает тело ответа.
-4. Считает среднее время, суммарный объём и скорость в Mbps.
